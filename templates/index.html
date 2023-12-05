@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digit Recognition Web App</title>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+</head>
+<body>
+    <canvas id="whiteboard" width="300" height="300" style="border:1px solid #000;"></canvas>
+    <button onclick="recognizeDigit()">Recognize Digit</button>
+    <p id="result"></p>
+
+    <script>
+        let drawing = false;
+        let canvas = document.getElementById('whiteboard');
+        let ctx = canvas.getContext('2d');
+
+        canvas.addEventListener('mousedown', () => drawing = true);
+        canvas.addEventListener('mouseup', () => drawing = false);
+        canvas.addEventListener('mousemove', draw);
+
+        function draw(e) {
+    if (!drawing) return;
+
+    ctx.lineWidth = 10;
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = 'black';
+
+    // Use offsetX and offsetY instead of clientX and clientY
+    ctx.lineTo(e.offsetX, e.offsetY);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(e.offsetX, e.offsetY);
+}
+
+
+function recognizeDigit() {
+    let imageData = canvas.toDataURL();
+    $.ajax({
+        type: 'POST',
+        url: '/recognize',
+        contentType: 'application/json;charset=UTF-8',
+        data: JSON.stringify({ 'image': imageData }),
+        success: function (response) {
+            document.getElementById('result').innerHTML = `Recognized Digit: ${response.digit}`;
+            // Clear the canvas and reset its state
+            canvas.width = canvas.width;
+            ctx.beginPath();
+        },
+        error: function (error) {
+            console.error('Error recognizing digit:', error);
+            // Clear the canvas and reset its state even if there's an error
+            canvas.width = canvas.width;
+            ctx.beginPath();
+        }
+    });
+}
+
+    </script>
+</body>
+</html>
